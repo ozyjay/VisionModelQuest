@@ -1,0 +1,10 @@
+[Desktop Entry]
+Name=Vision Processing Explorer
+Comment=Inspect offline visual-language model preprocessing and output
+Exec=@PROJECT_ROOT@/scripts/run_ui.sh
+Icon=io.github.ozyjay.VisionModelQuest
+Terminal=false
+Type=Application
+Categories=Development;Science;
+StartupNotify=true
+DBusActivatable=false

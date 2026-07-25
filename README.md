@@ -5,6 +5,10 @@ vision-language models on the Framework Desktop. It measures compatibility, dete
 contract following, latency, throughput, memory and thermal observations while keeping
 subjective quality under explicit human review.
 
+It also includes a Fedora-native GTK 4 and libadwaita
+[Vision Processing Explorer](docs/NATIVE_EXPLORER.md) for interactive prompt, image and
+visual-token experiments without a browser or local network service.
+
 The benchmark never downloads model weights. Real adapters resolve an allowlisted full
 commit from the existing Hugging Face cache with `local_files_only=True` and
 `trust_remote_code=False`. Missing, gated or incompatible models produce a structured
@@ -49,4 +53,3 @@ text for review; these reports remain gitignored.
 See [architecture](docs/ARCHITECTURE.md), [benchmark protocol](docs/BENCHMARK_PROTOCOL.md),
 [model support](docs/MODEL_SUPPORT.md), [results guide](docs/RESULTS_GUIDE.md) and
 [ModelDeck integration](docs/MODELDECK_INTEGRATION.md).
-

@@ -25,6 +25,7 @@ rocm = [
 
 [project.scripts]
 visionmodelquest = "visionmodelquest.cli:main"
+visionmodelquest-ui = "visionmodelquest.ui.application:main"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/visionmodelquest"]
@@ -37,6 +38,7 @@ markers = [
   "rocm: requires a working ROCm stack",
   "large_model: loads a large local model",
   "long_running: runs an extended stability check",
+  "gtk: requires GTK 4, libadwaita and an active graphical session",
 ]
 
 [tool.ruff]
@@ -45,4 +47,3 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
-

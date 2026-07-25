@@ -1,6 +1,14 @@
 $ErrorActionPreference = 'Stop'
 $Root = Split-Path -Parent $PSScriptRoot
 Set-Location $Root
+
+if (Test-Path './scripts/stop_ui.sh') {
+    & bash ./scripts/stop_ui.sh
+    if ($LASTEXITCODE -ne 0) {
+        throw "Could not safely stop the native application processes."
+    }
+}
+
 $PidFile = 'var/active-worker.pid'
 
 if (-not (Test-Path $PidFile)) {
@@ -26,4 +34,3 @@ if ($CommandLine -notmatch 'visionmodelquest\.worker') {
 Stop-Process -Id $WorkerPid
 Remove-Item $PidFile
 Write-Host "Stopped VisionModelQuest worker PID $WorkerPid."
-

@@ -1,6 +1,7 @@
 [CmdletBinding()]
 param(
-    [switch]$Rocm
+    [switch]$Rocm,
+    [switch]$Ui
 )
 
 $ErrorActionPreference = 'Stop'
@@ -65,7 +66,44 @@ function Resolve-Python312 {
     )
 }
 
-Install-Environment -Path '.venv' -BootstrapPython 'python3' -InstallArguments @('-e', '.[dev]')
+$ControlReady = $false
+if (Test-Path '.venv/bin/python') {
+    & .venv/bin/python -c 'import pydantic, pytest, ruff, visionmodelquest' 2>$null
+    $ControlReady = $LASTEXITCODE -eq 0
+}
+if (-not $ControlReady) {
+    Install-Environment -Path '.venv' -BootstrapPython 'python3' -InstallArguments @('-e', '.[dev]')
+}
+
+if ($Ui) {
+    $SystemPython = '/usr/bin/python3'
+    if (-not (Test-Path $SystemPython)) {
+        throw 'The Fedora system Python was not found at /usr/bin/python3.'
+    }
+    if (-not (Test-Path '.venv-ui/bin/python')) {
+        & $SystemPython -m venv --system-site-packages .venv-ui
+        if ($LASTEXITCODE -ne 0) {
+            throw 'Could not create .venv-ui with Fedora system packages.'
+        }
+    }
+    & .venv-ui/bin/python -m pip install --upgrade pip
+    if ($LASTEXITCODE -ne 0) {
+        throw 'Could not verify pip in .venv-ui.'
+    }
+    $UiSitePackages = & .venv-ui/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+    $ControlSitePackages = & .venv/bin/python -c "import sysconfig; print(sysconfig.get_path('purelib'))"
+    $UiPaths = @(
+        (Join-Path $Root 'src'),
+        $ControlSitePackages.Trim()
+    )
+    Set-Content `
+        -Path (Join-Path $UiSitePackages.Trim() 'visionmodelquest-local.pth') `
+        -Value $UiPaths
+    & .venv-ui/bin/python -c "import gi, pydantic, visionmodelquest; gi.require_version('Gtk', '4.0'); gi.require_version('Adw', '1'); from gi.repository import Gtk, Adw; print('GTK', Gtk.get_major_version(), Gtk.get_minor_version()); print('libadwaita', Adw.get_major_version(), Adw.get_minor_version())"
+    if ($LASTEXITCODE -ne 0) {
+        throw 'The GTK 4 and libadwaita bindings are unavailable in .venv-ui.'
+    }
+}
 
 if ($Rocm) {
     $RocmPython = Resolve-Python312

@@ -10,7 +10,7 @@ if (-not (Test-Path '.venv/bin/python')) {
 if ($LASTEXITCODE -ne 0) {
     throw "Ruff failed with exit code $LASTEXITCODE."
 }
-& .venv/bin/python -m pytest -m 'not hardware and not rocm and not large_model and not long_running'
+& .venv/bin/python -m pytest -m 'not gtk and not hardware and not rocm and not large_model and not long_running'
 if ($LASTEXITCODE -ne 0) {
     throw "Pytest failed with exit code $LASTEXITCODE."
 }

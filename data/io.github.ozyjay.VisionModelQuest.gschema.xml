@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="io.github.ozyjay.VisionModelQuest" path="/io/github/ozyjay/VisionModelQuest/">
+    <key name="idle-unload-minutes" type="u">
+      <default>10</default>
+      <range min="1" max="60"/>
+      <summary>Model idle-unload duration</summary>
+    </key>
+    <key name="default-visual-token-budget" type="u">
+      <default>140</default>
+      <summary>Default allowlisted visual-token budget</summary>
+    </key>
+    <key name="default-completion-token-limit" type="u">
+      <default>256</default>
+      <summary>Default allowlisted completion-token limit</summary>
+    </key>
+    <key name="last-used-fixture" type="s">
+      <default>'simple_desk'</default>
+      <summary>Last selected checked-in fixture</summary>
+    </key>
+    <key name="inspector-labels-visible" type="b">
+      <default>false</default>
+      <summary>Show visual-token indices</summary>
+    </key>
+    <key name="overlay-opacity" type="d">
+      <default>0.72</default>
+      <range min="0.1" max="1.0"/>
+      <summary>Visual-token overlay opacity</summary>
+    </key>
+    <key name="confirm-resource-actions" type="b">
+      <default>true</default>
+      <summary>Confirm resource-intensive actions</summary>
+    </key>
+    <key name="show-report-thermal-data" type="b">
+      <default>true</default>
+      <summary>Show benchmark thermal data</summary>
+    </key>
+  </schema>
+</schemalist>
