@@ -106,9 +106,15 @@ def _sample(
             }
         return result
     except ContractError as error:
-        return _failure_sample(
+        failure = _failure_sample(
             fixture_id, question_id, contract, warmup, "output_invalid", str(error), started
         )
+        if quality_capture:
+            failure["quality_capture"] = {
+                "prompt": prompt,
+                "output": generation.text,
+            }
+        return failure
     except Exception as error:
         return _failure_sample(
             fixture_id, question_id, contract, warmup, "generation_error", str(error), started

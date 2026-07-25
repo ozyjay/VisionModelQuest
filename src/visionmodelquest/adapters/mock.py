@@ -22,7 +22,7 @@ class MockAdapter(ModelAdapter):
         digest = hashlib.sha256(f"{image.name}\0{prompt}".encode()).hexdigest()[:12]
         preprocessing = time.perf_counter() - started
         inference_started = time.perf_counter()
-        if "Return only one JSON object" in prompt:
+        if '"objects": [' in prompt:
             text = (
                 '{"summary":"A prepared benchmark fixture is visible.",'
                 '"objects":[{"label":"fixture","description":"A local benchmark image is visible.",'
@@ -41,4 +41,3 @@ class MockAdapter(ModelAdapter):
             completion_tokens=len(text.split()),
             finish_reason="stop",
         )
-

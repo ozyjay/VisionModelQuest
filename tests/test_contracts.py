@@ -75,4 +75,6 @@ def test_prompts_are_deterministic_and_do_not_enable_identity():
     first = build_prompt("scene_json_v1", "Describe the scene.")
     assert first == build_prompt("scene_json_v1", "Describe the scene.")
     assert "Do not identify anyone" in first
-
+    assert '"objects": [' in first
+    assert '"approximate_location": "centre"' in first
+    assert "never an array of strings" in first

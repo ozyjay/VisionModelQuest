@@ -2,6 +2,7 @@ from pathlib import Path
 
 import pytest
 
+from visionmodelquest.adapters.base import Generation
 from visionmodelquest.adapters.mock import MockAdapter
 from visionmodelquest.benchmarks.runner import deterministic_hash, run_adapter, validate_image
 from visionmodelquest.config import PRESETS, ROOT, load_models, load_workload
@@ -68,6 +69,40 @@ def test_quality_capture_is_explicit():
     assert all("quality_capture" in sample for sample in result["samples"])
 
 
+def test_quality_capture_retains_invalid_output_only_when_explicit():
+    definition = load_models()["mock"]
+    fixtures, questions = load_workload()
+
+    class InvalidAdapter(MockAdapter):
+        def generate(self, image: Path, prompt: str) -> Generation:
+            return Generation(
+                text="not valid JSON",
+                preprocessing_seconds=0.0,
+                inference_seconds=0.1,
+                first_output_seconds=0.1,
+                prompt_tokens=1,
+                completion_tokens=3,
+                finish_reason="stop",
+            )
+
+    captured = run_adapter(
+        definition,
+        InvalidAdapter(definition),
+        fixtures,
+        questions,
+        PRESETS["quick"],
+        root=ROOT,
+        selected_fixture_ids={"simple_desk"},
+        quality_capture=True,
+    )
+    failed = [
+        sample
+        for sample in captured["samples"]
+        if sample["contract"] == "scene_json_v1"
+    ]
+    assert all(sample["quality_capture"]["output"] == "not valid JSON" for sample in failed)
+
+
 def test_deterministic_hash():
     assert deterministic_hash("same") == deterministic_hash("same")
     assert deterministic_hash("same") != deterministic_hash("different")
@@ -98,4 +133,3 @@ def test_missing_gpu_is_a_structured_model_failure(tmp_path: Path):
     )
     assert result["status"] == "failed"
     assert result["failure_category"] == "hardware_unavailable"
-
