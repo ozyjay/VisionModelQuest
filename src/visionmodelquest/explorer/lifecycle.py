@@ -50,3 +50,12 @@ class Lifecycle:
             raise ValueError(f"invalid worker transition: {self.state} → {target}")
         self.state = target
         return target
+
+
+def automatic_restart_delay(crash_count: int, *, maximum_crashes: int = 3) -> int | None:
+    """Return bounded exponential backoff, or None when automatic recovery must stop."""
+    if crash_count < 1 or maximum_crashes < 1:
+        raise ValueError("crash counts must be positive")
+    if crash_count >= maximum_crashes:
+        return None
+    return 2 ** (crash_count - 1)

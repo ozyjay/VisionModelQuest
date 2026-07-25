@@ -3,7 +3,11 @@ from __future__ import annotations
 import pytest
 
 from visionmodelquest.contracts import SYSTEM_SAFETY
-from visionmodelquest.explorer.lifecycle import Lifecycle, WorkerState
+from visionmodelquest.explorer.lifecycle import (
+    Lifecycle,
+    WorkerState,
+    automatic_restart_delay,
+)
 from visionmodelquest.explorer.prompts import (
     canonical_diff,
     compile_prompt,
@@ -37,3 +41,12 @@ def test_lifecycle_rejects_invalid_transitions() -> None:
 
     with pytest.raises(ValueError, match="invalid worker transition"):
         lifecycle.transition(WorkerState.GENERATING)
+
+
+def test_automatic_worker_restart_is_bounded() -> None:
+    assert automatic_restart_delay(1) == 1
+    assert automatic_restart_delay(2) == 2
+    assert automatic_restart_delay(3) is None
+
+    with pytest.raises(ValueError, match="positive"):
+        automatic_restart_delay(0)

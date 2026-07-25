@@ -457,7 +457,7 @@ class ExplorerPage(Gtk.Box):
         if index >= len(self.fixtures.fixtures):
             return
         fixture = self.fixtures.fixtures[index]
-        path = ROOT / fixture.image
+        path = ROOT / "fixtures" / fixture.image
         if self.image and self.image.original_name == path.name:
             return
         try:
@@ -830,6 +830,7 @@ class VisionExplorerApplication(Adw.Application):
         self.explorer: ExplorerPage
         self.controller: WorkerController
         self.toast_overlay: Adw.ToastOverlay
+        self._worker_error_dialog: Adw.AlertDialog | None = None
         self.connect("shutdown", self._shutdown)
         self._install_actions()
 
@@ -990,7 +991,18 @@ class VisionExplorerApplication(Adw.Application):
 
     def _worker_error(self, message: str) -> None:
         self.notify("Vision worker failed", message)
-        self.show_error("Inference worker failed", message)
+        if self._worker_error_dialog is not None:
+            self._worker_error_dialog.set_body(message)
+            return
+        dialog = Adw.AlertDialog(heading="Inference worker failed", body=message)
+        dialog.add_response("close", "Close")
+
+        def closed(*_args: object) -> None:
+            self._worker_error_dialog = None
+
+        dialog.connect("response", closed)
+        self._worker_error_dialog = dialog
+        dialog.present(self.window)
 
     def _new_experiment(self) -> None:
         self.stack.set_visible_child_name("explorer")

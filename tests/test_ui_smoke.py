@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import os
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -34,3 +36,27 @@ def test_inspector_supports_keyboard_selection() -> None:
     inspector.select(0)
     inspector.select(inspector.selected_index + inspector.merged_columns)
     assert inspector.selected_index == 10
+
+
+def test_worker_controller_preserves_virtual_environment_launcher(
+    tmp_path: Path,
+) -> None:
+    from visionmodelquest.ui.controller import WorkerController
+
+    environment = tmp_path / "inference-env"
+    (environment / "bin").mkdir(parents=True)
+    launcher = environment / "bin" / "python"
+    launcher.symlink_to(Path(sys.executable).resolve())
+    session = tmp_path / "session"
+    (session / "images").mkdir(parents=True)
+    (session / "processed").mkdir()
+    controller = WorkerController(
+        python=launcher,
+        model_key="mock",
+        session_root=session,
+        runtime_root=tmp_path / "runtime",
+        log_root=tmp_path / "logs",
+    )
+
+    assert controller.python == launcher.absolute()
+    assert controller.python != launcher.resolve()
