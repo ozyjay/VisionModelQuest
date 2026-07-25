@@ -1,0 +1,12 @@
+.env
+.venv/
+.venv-rocm72/
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+reports/*
+!reports/.gitkeep
+fixtures/reviews/*
+!fixtures/reviews/.gitkeep
+

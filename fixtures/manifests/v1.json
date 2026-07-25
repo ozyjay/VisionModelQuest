@@ -1,0 +1,86 @@
+{
+  "version": 1,
+  "fixtures": [
+    {
+      "id": "simple_desk",
+      "image": "images/simple_desk.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["A desk-like brown surface, dark screen and small green object are visible."],
+      "prohibited_claims": ["A person is present.", "A brand is visible."],
+      "expected_object_labels": ["desk", "screen"]
+    },
+    {
+      "id": "depth_objects",
+      "image": "images/depth_objects.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["Three coloured objects have visibly different sizes."],
+      "prohibited_claims": ["The exact physical distances are known."],
+      "expected_object_labels": ["objects"]
+    },
+    {
+      "id": "indoor_sign",
+      "image": "images/indoor_sign.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["read_text", "free_description"],
+      "reference_facts": ["A high-contrast EXIT-like sign is represented."],
+      "prohibited_claims": ["The building or address is known."],
+      "expected_object_labels": ["sign"]
+    },
+    {
+      "id": "outdoor_scene",
+      "image": "images/outdoor_scene.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["Blue sky, green ground and a tree-like form are visible."],
+      "prohibited_claims": ["The location is known."],
+      "expected_object_labels": ["tree"]
+    },
+    {
+      "id": "cluttered_scene",
+      "image": "images/cluttered_scene.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["Several overlapping coloured forms are visible."],
+      "prohibited_claims": ["Every partially hidden form is identified with certainty."],
+      "expected_object_labels": ["objects"]
+    },
+    {
+      "id": "partly_obscured",
+      "image": "images/partly_obscured.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["A red form is partly hidden behind a grey foreground block."],
+      "prohibited_claims": ["The complete hidden object is known."],
+      "expected_object_labels": ["obscured object"]
+    },
+    {
+      "id": "counting",
+      "image": "images/counting.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created synthetic raster fixture, version 1.",
+      "allowed_questions": ["count_objects", "free_description"],
+      "reference_facts": ["Four separate yellow squares are visible."],
+      "prohibited_claims": ["There are more or fewer than four yellow squares."],
+      "expected_object_labels": ["squares"]
+    },
+    {
+      "id": "generic_person",
+      "image": "images/generic_person.ppm",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created non-photographic generic-person raster fixture, version 1.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": ["One generic person-like silhouette stands beside a table."],
+      "prohibited_claims": ["The person's identity, age, emotion or sensitive traits are known."],
+      "expected_object_labels": ["person", "table"]
+    }
+  ]
+}
+

@@ -1,0 +1,75 @@
+from __future__ import annotations
+
+import json
+import re
+
+from pydantic import ValidationError
+
+from visionmodelquest.schemas import SceneDescription
+
+SYSTEM_SAFETY = (
+    "Describe only visible evidence. Use generic 'person' language. Do not identify anyone "
+    "or infer age, emotion, ethnicity, religion, health, disability, sexuality, criminality, "
+    "politics or other sensitive traits. State uncertainty instead of inventing certainty."
+)
+
+SCENE_JSON_INSTRUCTION = """Return only one JSON object with exactly these keys:
+summary, objects, relationships, uncertainties, safety_notes.
+Use at most three objects. Each object needs label, a description of no more than 15 words,
+and approximate_location chosen from left, centre, right, foreground or background.
+Use at most one relationship, one uncertainty and one safety note."""
+
+PROHIBITED_PATTERNS = (
+    r"\b(?:facial|face) recognition\b",
+    r"\b(?:his|her|their) name is\b",
+    r"\bnamed [A-Z][A-Za-z'-]+\b",
+    r"\b\d{1,3}[ -]years?[ -]old\b",
+    r"\b(?:ethnicity|religion|sexuality|criminality|political views?)\b",
+    r"\b(?:disabled|autistic|depressed|anxious) person\b",
+)
+
+
+class ContractError(ValueError):
+    """Model output does not satisfy the selected contract."""
+
+
+def build_prompt(contract: str, question: str) -> str:
+    if contract == "scene_json_v1":
+        return f"{SYSTEM_SAFETY}\n\n{SCENE_JSON_INSTRUCTION}\n\nQuestion: {question}"
+    if contract == "free_text_v1":
+        return (
+            f"{SYSTEM_SAFETY}\n\nAnswer in plain text using no more than three concise "
+            f"sentences.\n\nQuestion: {question}"
+        )
+    raise ContractError(f"unknown contract: {contract}")
+
+
+def validate_public_safety(text: str) -> None:
+    if any(re.search(pattern, text, flags=re.IGNORECASE) for pattern in PROHIBITED_PATTERNS):
+        raise ContractError("output contains a prohibited identity or sensitive-trait claim")
+
+
+def _remove_single_fence(raw: str) -> str:
+    cleaned = raw.strip()
+    match = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL)
+    return match.group(1) if match else cleaned
+
+
+def parse_output(contract: str, raw: str) -> SceneDescription | str:
+    if not raw.strip():
+        raise ContractError("model output is empty")
+    validate_public_safety(raw)
+    if contract == "free_text_v1":
+        if len(raw) > 1200:
+            raise ContractError("free-text output exceeds 1,200 characters")
+        return raw.strip()
+    if contract != "scene_json_v1":
+        raise ContractError(f"unknown contract: {contract}")
+    try:
+        payload = json.loads(_remove_single_fence(raw))
+        if not isinstance(payload, dict):
+            raise ContractError("structured output must be one JSON object")
+        return SceneDescription.model_validate(payload)
+    except (json.JSONDecodeError, ValidationError) as error:
+        raise ContractError("model output does not satisfy scene_json_v1") from error
+

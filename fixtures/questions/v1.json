@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "questions": [
+    {"id": "scene_json", "contract": "scene_json_v1", "text": "Describe the visible scene."},
+    {"id": "free_description", "contract": "free_text_v1", "text": "Describe this image concisely."},
+    {"id": "read_text", "contract": "scene_json_v1", "text": "What visible text or signage can be read?"},
+    {"id": "count_objects", "contract": "scene_json_v1", "text": "Count the repeated visible objects and describe their arrangement."}
+  ]
+}
+

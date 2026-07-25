@@ -1,0 +1,48 @@
+[build-system]
+requires = ["hatchling>=1.27"]
+build-backend = "hatchling.build"
+
+[project]
+name = "visionmodelquest"
+version = "0.1.0"
+description = "Offline-first vision-language model benchmark laboratory"
+readme = "README.md"
+requires-python = ">=3.12,<3.15"
+dependencies = [
+  "pillow>=11,<13",
+  "psutil>=6,<8",
+  "pydantic>=2.10,<3",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.3,<10",
+  "ruff>=0.11,<1",
+]
+rocm = [
+  "transformers==5.13.0",
+]
+
+[project.scripts]
+visionmodelquest = "visionmodelquest.cli:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/visionmodelquest"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = ["tests"]
+markers = [
+  "hardware: requires physical hardware access",
+  "rocm: requires a working ROCm stack",
+  "large_model: loads a large local model",
+  "long_running: runs an extended stability check",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
