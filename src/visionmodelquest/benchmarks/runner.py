@@ -302,7 +302,16 @@ def run_adapter(
             "passed" if measured and all(item["status"] == "passed" for item in measured) else "failed"
         )
         if result["status"] == "failed":
-            result["failure_category"] = "generation_error"
+            failure_categories = {
+                str(item["failure_category"])
+                for item in measured
+                if item.get("status") == "failed" and item.get("failure_category")
+            }
+            result["failure_category"] = (
+                "output_invalid"
+                if failure_categories == {"output_invalid"}
+                else "generation_error"
+            )
     except Exception as error:
         result["failure_category"] = _categorise_error(error)
         result["failure_reason"] = str(error)[:500]

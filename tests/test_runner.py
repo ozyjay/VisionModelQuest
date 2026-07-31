@@ -101,6 +101,8 @@ def test_quality_capture_retains_invalid_output_only_when_explicit():
         if sample["contract"] == "scene_json_v1"
     ]
     assert all(sample["quality_capture"]["output"] == "not valid JSON" for sample in failed)
+    assert captured["status"] == "failed"
+    assert captured["failure_category"] == "output_invalid"
 
 
 def test_deterministic_hash():

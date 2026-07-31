@@ -14,17 +14,21 @@ def aggregate_report(report: dict[str, Any]) -> dict[str, Any]:
         sample
         for result in report.get("models", [])
         for sample in result.get("samples", [])
-        if sample.get("status") == "passed" and not sample.get("warmup")
+        if not sample.get("warmup")
     ]
-    latency = [float(item["total_seconds"]) for item in samples]
-    inference = [float(item["inference_seconds"]) for item in samples]
+    successful = [sample for sample in samples if sample.get("status") == "passed"]
+    latency = [float(item["total_seconds"]) for item in successful]
+    inference = [float(item["inference_seconds"]) for item in successful]
     throughput = [
         float(item["tokens_per_second"])
-        for item in samples
+        for item in successful
         if item.get("tokens_per_second") is not None
     ]
     structured = [item for item in samples if item.get("contract") == "scene_json_v1"]
-    valid = sum(bool(item.get("structured_output_valid")) for item in structured)
+    valid = sum(
+        item.get("status") == "passed" and bool(item.get("structured_output_valid"))
+        for item in structured
+    )
     grouped: dict[tuple[str, str, str], list[dict[str, Any]]] = defaultdict(list)
     for sample in samples:
         grouped[
@@ -36,10 +40,15 @@ def aggregate_report(report: dict[str, Any]) -> dict[str, Any]:
         ].append(sample)
     workloads = []
     for (fixture_id, question_id, contract), workload_samples in sorted(grouped.items()):
-        workload_latency = [float(item["total_seconds"]) for item in workload_samples]
+        successful_workload_samples = [
+            item for item in workload_samples if item.get("status") == "passed"
+        ]
+        workload_latency = [
+            float(item["total_seconds"]) for item in successful_workload_samples
+        ]
         workload_throughput = [
             float(item["tokens_per_second"])
-            for item in workload_samples
+            for item in successful_workload_samples
             if item.get("tokens_per_second") is not None
         ]
         workloads.append(
@@ -50,7 +59,11 @@ def aggregate_report(report: dict[str, Any]) -> dict[str, Any]:
                 "latency_seconds": summarise(workload_latency),
                 "tokens_per_second": summarise(workload_throughput),
                 "structured_output_success_rate": (
-                    sum(bool(item.get("structured_output_valid")) for item in workload_samples)
+                    sum(
+                        item.get("status") == "passed"
+                        and bool(item.get("structured_output_valid"))
+                        for item in workload_samples
+                    )
                     / len(workload_samples)
                     if contract == "scene_json_v1"
                     else None

@@ -57,6 +57,55 @@ def test_report_generation_and_privacy(tmp_path: Path):
     assert model["aggregate"]["workloads"][0]["fixture_id"] == "safe-id"
 
 
+def test_aggregate_counts_failed_requests_and_structured_outputs():
+    samples = [
+        {
+            "status": "passed",
+            "warmup": True,
+            "contract": "scene_json_v1",
+            "structured_output_valid": True,
+            "fixture_id": "warmup",
+            "question_id": "scene_json",
+            "total_seconds": 0.5,
+            "inference_seconds": 0.4,
+            "tokens_per_second": 10.0,
+        },
+        {
+            "status": "passed",
+            "warmup": False,
+            "contract": "scene_json_v1",
+            "structured_output_valid": True,
+            "fixture_id": "valid",
+            "question_id": "scene_json",
+            "total_seconds": 1.0,
+            "inference_seconds": 0.8,
+            "tokens_per_second": 10.0,
+        },
+        {
+            "status": "failed",
+            "warmup": False,
+            "contract": "scene_json_v1",
+            "failure_category": "output_invalid",
+            "fixture_id": "invalid",
+            "question_id": "scene_json",
+            "total_seconds": 1.2,
+        },
+    ]
+
+    aggregate = aggregate_report({"models": [{"samples": samples}]})
+
+    assert aggregate["request_count"] == 2
+    assert aggregate["latency_seconds"]["count"] == 1
+    assert aggregate["structured_output_success_rate"] == 0.5
+    invalid_workload = next(
+        workload
+        for workload in aggregate["workloads"]
+        if workload["fixture_id"] == "invalid"
+    )
+    assert invalid_workload["latency_seconds"]["count"] == 0
+    assert invalid_workload["structured_output_success_rate"] == 0.0
+
+
 def test_recommendations_do_not_infer_subjective_quality():
     model = {
         "model_key": "mock",
