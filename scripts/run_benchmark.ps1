@@ -5,6 +5,8 @@ param(
     [string[]]$Models = @('mock'),
     [string[]]$Fixtures,
     [double]$DurationSeconds,
+    [ValidateRange(40, 120)]
+    [double]$MaxTemperatureCelsius = 95,
     [switch]$QualityCapture
 )
 
@@ -17,7 +19,12 @@ if (-not (Test-Path $Python)) {
     throw "Missing benchmark environment $Python. Run scripts/setup.ps1 with the appropriate options."
 }
 
-$Arguments = @('-m', 'visionmodelquest.cli', 'run', '--preset', $Preset.ToLowerInvariant(), '--models') + $Models
+$Arguments = @(
+    '-m', 'visionmodelquest.cli', 'run',
+    '--preset', $Preset.ToLowerInvariant(),
+    '--max-temperature-celsius', $MaxTemperatureCelsius.ToString([Globalization.CultureInfo]::InvariantCulture),
+    '--models'
+) + $Models
 if ($Fixtures) {
     $Arguments += @('--fixtures') + $Fixtures
 }
@@ -31,4 +38,3 @@ if ($QualityCapture) {
 if ($LASTEXITCODE -ne 0) {
     throw "Benchmark failed with exit code $LASTEXITCODE. A partial report was retained."
 }
-

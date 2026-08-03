@@ -24,9 +24,12 @@ FailureCategory = Literal[
     "incompatible",
     "interrupted",
     "output_invalid",
+    "thermal_limit",
     "timeout",
     "unsupported",
 ]
+
+DEFAULT_MAX_TEMPERATURE_CELSIUS = 95.0
 
 
 class StrictModel(BaseModel):

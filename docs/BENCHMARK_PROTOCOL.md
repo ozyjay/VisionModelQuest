@@ -14,6 +14,13 @@ performs two warm-ups, cycles the same curated tasks for a configurable duration
 memory and temperature around every request, then checks unload and process exit.
 Comparison selects multiple model keys and executes them sequentially.
 
+The parent benchmark process checks available Linux thermal sensors once per second. If
+any sensor reaches the default 95 °C safety limit, it immediately kills the isolated model
+worker, records a `thermal_limit` failure with the triggering sensor and does not run any
+remaining models. Override the limit with `-MaxTemperatureCelsius` when hardware-specific
+guidance requires a lower threshold. If the operating system exposes no readable sensors,
+this software failsafe cannot operate; firmware thermal protection remains essential.
+
 Each sample records the environment, exact model identity, adapter, dtype, image dimensions
 and bytes, configured visual-token budget and completion limit, load and unload time,
 preprocessing, available first-output timing, inference, validation, end-to-end latency,
@@ -32,4 +39,3 @@ Create review records with `visionmodelquest review-template`. Score each dimens
 hallucination avoidance, counting, spatial accuracy, uncertainty, text reading, concision,
 JSON compliance and public safety. Notes explain unusual or non-applicable cases. Human
 review is authoritative; automated validation assists only contract and safety checks.
-

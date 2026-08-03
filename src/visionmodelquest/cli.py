@@ -7,6 +7,7 @@ import signal
 import subprocess
 import sys
 import tempfile
+import threading
 from pathlib import Path
 from typing import Any
 
@@ -14,10 +15,41 @@ from visionmodelquest.benchmarks.quality import review_template
 from visionmodelquest.benchmarks.reporting import comparison_recommendations, write_report
 from visionmodelquest.benchmarks.runner import new_report
 from visionmodelquest.cache import cache_status, default_cache_root
-from visionmodelquest.config import PRESETS, ROOT, load_models, load_workload
-from visionmodelquest.hardware import write_probe
+from visionmodelquest.config import (
+    DEFAULT_MAX_TEMPERATURE_CELSIUS,
+    PRESETS,
+    ROOT,
+    load_models,
+    load_workload,
+)
+from visionmodelquest.hardware import temperature_readings, write_probe
 
 ACTIVE_WORKER_PATH = ROOT / "var" / "active-worker.pid"
+TEMPERATURE_POLL_INTERVAL_SECONDS = 1.0
+
+
+def _hottest_temperature() -> dict[str, object] | None:
+    readings = temperature_readings()
+    return max(readings, key=lambda item: float(item["celsius"])) if readings else None
+
+
+def _monitor_temperature(
+    process: subprocess.Popen[str],
+    max_temperature_celsius: float,
+    finished: threading.Event,
+    thermal_trip: list[dict[str, object]],
+) -> None:
+    while not finished.is_set():
+        hottest = _hottest_temperature()
+        if hottest is not None and float(hottest["celsius"]) >= max_temperature_celsius:
+            thermal_trip.append(hottest)
+            if process.poll() is None:
+                try:
+                    os.killpg(process.pid, signal.SIGKILL)
+                except ProcessLookupError:
+                    pass
+            return
+        finished.wait(TEMPERATURE_POLL_INTERVAL_SECONDS)
 
 
 def _run_model(
@@ -28,6 +60,7 @@ def _run_model(
     fixtures: list[str],
     quality_capture: bool,
     stability_duration_seconds: float | None,
+    max_temperature_celsius: float,
 ) -> dict[str, Any]:
     with tempfile.TemporaryDirectory(prefix="visionmodelquest-") as temporary:
         result_path = Path(temporary) / "result.json"
@@ -70,6 +103,15 @@ def _run_model(
             definition.startup_timeout_seconds
             + definition.generation_timeout_seconds * task_multiplier
         )
+        monitor_finished = threading.Event()
+        thermal_trip: list[dict[str, object]] = []
+        monitor = threading.Thread(
+            target=_monitor_temperature,
+            args=(process, max_temperature_celsius, monitor_finished, thermal_trip),
+            name="visionmodelquest-thermal-monitor",
+            daemon=True,
+        )
+        monitor.start()
         try:
             try:
                 stdout, stderr = process.communicate(timeout=timeout)
@@ -91,11 +133,32 @@ def _run_model(
                 _terminate_process_group(process)
                 raise
         finally:
+            monitor_finished.set()
+            monitor.join(timeout=TEMPERATURE_POLL_INTERVAL_SECONDS * 2)
             try:
                 if ACTIVE_WORKER_PATH.read_text(encoding="utf-8").strip() == str(process.pid):
                     ACTIVE_WORKER_PATH.unlink()
             except OSError:
                 pass
+        if thermal_trip:
+            reading = thermal_trip[0]
+            return {
+                "model_key": model_key,
+                "display_name": definition.display_name,
+                "model_id": definition.model_id,
+                "revision": definition.revision,
+                "status": "failed",
+                "failure_category": "thermal_limit",
+                "failure_reason": (
+                    f"thermal safety limit of {max_temperature_celsius:g} °C reached by "
+                    f"{reading['label']} ({float(reading['celsius']):g} °C)"
+                ),
+                "thermal_limit_celsius": max_temperature_celsius,
+                "thermal_trip": reading,
+                "process_exit": process.returncode,
+                "samples": [],
+                "aggregate": {},
+            }
         if result_path.is_file():
             try:
                 result = json.loads(result_path.read_text(encoding="utf-8"))
@@ -176,23 +239,34 @@ def _run(arguments: argparse.Namespace) -> int:
         print(f"Unknown model keys: {', '.join(unknown)}", file=sys.stderr)
         return 2
     load_workload()
+    if not 40 <= arguments.max_temperature_celsius <= 120:
+        print("Maximum temperature must be between 40 and 120 °C.", file=sys.stderr)
+        return 2
     preset = PRESETS[arguments.preset.lower()]
     report = new_report(preset, quality_capture=arguments.quality_capture)
+    report["thermal_safety"] = {
+        "enabled": True,
+        "maximum_celsius": arguments.max_temperature_celsius,
+        "poll_interval_seconds": TEMPERATURE_POLL_INTERVAL_SECONDS,
+    }
     cache_root = arguments.cache_root or default_cache_root()
     interrupted = False
     try:
         for model_key in selected:
             print(f"Running {model_key} ({preset.name})...", flush=True)
-            report["models"].append(
-                _run_model(
-                    model_key,
-                    preset.name,
-                    cache_root=cache_root,
-                    fixtures=arguments.fixtures or [],
-                    quality_capture=arguments.quality_capture,
-                    stability_duration_seconds=arguments.duration_seconds,
-                )
+            model_result = _run_model(
+                model_key,
+                preset.name,
+                cache_root=cache_root,
+                fixtures=arguments.fixtures or [],
+                quality_capture=arguments.quality_capture,
+                stability_duration_seconds=arguments.duration_seconds,
+                max_temperature_celsius=arguments.max_temperature_celsius,
             )
+            report["models"].append(model_result)
+            if model_result.get("failure_category") == "thermal_limit":
+                report["thermal_abort"] = True
+                break
     except KeyboardInterrupt:
         interrupted = True
     if interrupted:
@@ -236,6 +310,12 @@ def parser() -> argparse.ArgumentParser:
     run.add_argument("--fixtures", nargs="+")
     run.add_argument("--cache-root", type=Path)
     run.add_argument("--duration-seconds", type=float)
+    run.add_argument(
+        "--max-temperature-celsius",
+        type=float,
+        default=DEFAULT_MAX_TEMPERATURE_CELSIUS,
+        help="Immediately terminate benchmarking at this temperature (default: 95)",
+    )
     run.add_argument("--quality-capture", action="store_true")
     run.add_argument("--output-directory", type=Path, default=ROOT / "reports")
     run.set_defaults(function=_run)

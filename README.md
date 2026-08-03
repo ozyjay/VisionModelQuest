@@ -23,6 +23,10 @@ pwsh -NoProfile -File scripts/verify.ps1
 pwsh -NoProfile -File scripts/run_benchmark.ps1 -Preset Quick
 ```
 
+Benchmarks include an independent thermal failsafe. The model worker is terminated and the
+run stops if any available sensor reaches 95 °C. Set a lower hardware-specific limit with
+`-MaxTemperatureCelsius`; systems without readable Linux sensors cannot use this failsafe.
+
 The default setup and Quick run use only the deterministic mock adapter. To create the
 separate pinned ROCm environment, use:
 
