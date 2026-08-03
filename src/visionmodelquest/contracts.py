@@ -66,8 +66,21 @@ def validate_public_safety(text: str) -> None:
 
 def _remove_single_fence(raw: str) -> str:
     cleaned = raw.strip()
-    match = re.fullmatch(r"```(?:json)?\s*(.*?)\s*```", cleaned, flags=re.DOTALL)
-    return match.group(1) if match else cleaned
+    opening = re.match(r"```(?:json)?[ \t]*(?:\r?\n|$)", cleaned)
+    if opening is None:
+        return cleaned
+    content = cleaned[opening.end() :].rstrip()
+    if content.endswith("```"):
+        content = content[:-3].rstrip()
+    return content
+
+
+def _validation_reason(error: ValidationError) -> str:
+    details = []
+    for item in error.errors(include_input=False, include_url=False):
+        location = ".".join(str(part) for part in item["loc"]) or "output"
+        details.append(f"{location}: {item['msg']}")
+    return "; ".join(details)
 
 
 def parse_output(contract: str, raw: str) -> SceneDescription | str:
@@ -82,8 +95,14 @@ def parse_output(contract: str, raw: str) -> SceneDescription | str:
         raise ContractError(f"unknown contract: {contract}")
     try:
         payload = json.loads(_remove_single_fence(raw))
-        if not isinstance(payload, dict):
-            raise ContractError("structured output must be one JSON object")
+    except json.JSONDecodeError as error:
+        raise ContractError(
+            f"scene_json_v1 JSON invalid at line {error.lineno}, column {error.colno}: "
+            f"{error.msg}"
+        ) from error
+    if not isinstance(payload, dict):
+        raise ContractError("structured output must be one JSON object")
+    try:
         return SceneDescription.model_validate(payload)
-    except (json.JSONDecodeError, ValidationError) as error:
-        raise ContractError("model output does not satisfy scene_json_v1") from error
+    except ValidationError as error:
+        raise ContractError(f"scene_json_v1 schema invalid: {_validation_reason(error)}") from error

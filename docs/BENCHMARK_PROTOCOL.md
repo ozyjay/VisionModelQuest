@@ -34,6 +34,11 @@ memory fallbacks, peak allocated GPU memory where PyTorch exposes it, temperatur
 failure category. Transformers' non-streaming `generate` cannot expose a reliable
 time-to-first-token value, so that field is `null` rather than inferred.
 
+Structured-output validation tolerates one optional leading `json` Markdown fence, including
+when the model omits only the closing fence. Any trailing content, malformed or incomplete
+JSON, extra fields, or schema-bound violation still fails. Failure samples retain generation
+measurements and report the JSON location or schema field that caused rejection.
+
 Median and p95 are reported separately; p95 uses nearest rank. Different workloads are not
 collapsed into a single score.
 

@@ -109,6 +109,32 @@ def _sample(
         failure = _failure_sample(
             fixture_id, question_id, contract, warmup, "output_invalid", str(error), started
         )
+        completion_tokens = generation.completion_tokens
+        failure.update(
+            {
+                "image": image_details,
+                "preprocessing_seconds": generation.preprocessing_seconds,
+                "time_to_first_output_seconds": generation.first_output_seconds,
+                "inference_seconds": generation.inference_seconds,
+                "validation_seconds": time.perf_counter() - validation_started,
+                "prompt_tokens": generation.prompt_tokens,
+                "completion_tokens": completion_tokens,
+                "tokens_per_second": (
+                    completion_tokens / generation.inference_seconds
+                    if completion_tokens is not None and generation.inference_seconds > 0
+                    else None
+                ),
+                "finish_reason": generation.finish_reason,
+                "visual_tokens": generation.visual_tokens,
+                "structured_output_valid": False,
+                "output_hash": deterministic_hash(generation.text),
+                "peak_gpu_memory_bytes": generation.peak_gpu_memory_bytes,
+                "memory_before": host_before,
+                "memory_after": memory_snapshot(),
+                "hottest_temperature_before": _hottest(temperatures_before),
+                "hottest_temperature_after": _hottest(temperature_readings()),
+            }
+        )
         if quality_capture:
             failure["quality_capture"] = {
                 "prompt": prompt,

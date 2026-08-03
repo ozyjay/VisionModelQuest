@@ -27,6 +27,18 @@ def test_strict_structured_output_accepts_one_optional_fence():
     assert result.summary == "A person is beside a table."
 
 
+def test_strict_structured_output_accepts_one_unclosed_leading_fence():
+    raw = f"```json\n{json.dumps(valid_payload())}"
+    result = parse_output("scene_json_v1", raw)
+    assert result.summary == "A person is beside a table."
+
+
+def test_strict_structured_output_rejects_content_after_json():
+    raw = f"```json\n{json.dumps(valid_payload())}\nextra text"
+    with pytest.raises(ContractError, match="JSON invalid"):
+        parse_output("scene_json_v1", raw)
+
+
 def test_strict_structured_output_rejects_extra_keys():
     payload = valid_payload()
     payload["identity"] = "someone"
@@ -37,8 +49,13 @@ def test_strict_structured_output_rejects_extra_keys():
 def test_object_and_relationship_bounds_are_enforced():
     payload = valid_payload()
     payload["objects"] = payload["objects"] * 4
-    with pytest.raises(ContractError):
+    with pytest.raises(ContractError, match=r"schema invalid: objects: .*at most 3"):
         parse_output("scene_json_v1", json.dumps(payload))
+
+
+def test_malformed_json_reports_location_and_reason():
+    with pytest.raises(ContractError, match=r"JSON invalid at line 1, column 2"):
+        parse_output("scene_json_v1", "{")
 
 
 def test_description_word_limit_is_enforced():
