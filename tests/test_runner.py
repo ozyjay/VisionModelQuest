@@ -12,8 +12,10 @@ def test_all_checked_in_images_are_valid():
     fixtures, _ = load_workload()
     for fixture in fixtures.fixtures:
         details = validate_image(ROOT / "fixtures" / fixture.image)
-        assert details["width"] > 0
+        assert details["width"] >= 1024
+        assert details["height"] >= 768
         assert details["encoded_bytes"] > 0
+        assert details["format"] == "PNG"
 
 
 def test_invalid_image_is_rejected(tmp_path: Path):

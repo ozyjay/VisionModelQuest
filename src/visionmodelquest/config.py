@@ -9,7 +9,7 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 ROOT = Path(__file__).resolve().parents[2]
 MODEL_CONFIG_PATH = ROOT / "config" / "models.json"
-FIXTURE_MANIFEST_PATH = ROOT / "fixtures" / "manifests" / "v1.json"
+FIXTURE_MANIFEST_PATH = ROOT / "fixtures" / "manifests" / "v2.json"
 QUESTION_PATH = ROOT / "fixtures" / "questions" / "v1.json"
 
 AdapterName = Literal["mock", "qwen35", "smolvlm2", "gemma3"]

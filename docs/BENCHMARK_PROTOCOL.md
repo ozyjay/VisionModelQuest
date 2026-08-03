@@ -8,6 +8,11 @@ Two deterministic contracts are used:
 
 Both forbid identity recognition, sensitive-trait inference and invented certainty.
 
+The active version-2 workload uses project-created, AI-generated photorealistic PNG fixtures
+at 1448 × 1086. Each scene has explicit reference facts, prohibited claims and object labels.
+The original 8 × 6 PPM fixtures remain with the version-1 manifest only to reproduce legacy
+reports; they are not representative evidence of model vision quality.
+
 Quick performs one warm-up and two measured requests per selected fixture/question.
 Standard performs two warm-ups and ten measured requests per fixture/question. Stability
 performs two warm-ups, cycles the same curated tasks for a configurable duration, samples

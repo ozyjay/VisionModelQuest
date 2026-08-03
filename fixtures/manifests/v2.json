@@ -1,0 +1,108 @@
+{
+  "version": 2,
+  "fixtures": [
+    {
+      "id": "simple_desk",
+      "image": "images/simple_desk.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "A black monitor is centred on a brown wooden desk.",
+        "A closed blue notebook is on the left and a green mug is on the right."
+      ],
+      "prohibited_claims": ["A person is present.", "A brand or readable text is visible."],
+      "expected_object_labels": ["monitor", "notebook", "mug", "desk"]
+    },
+    {
+      "id": "depth_objects",
+      "image": "images/depth_objects.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "A large red cube is in the left foreground.",
+        "A blue sphere is near the centre and a small yellow cone is in the right background."
+      ],
+      "prohibited_claims": ["The exact physical distances or dimensions are known."],
+      "expected_object_labels": ["cube", "sphere", "cone"]
+    },
+    {
+      "id": "indoor_sign",
+      "image": "images/indoor_sign.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["read_text", "free_description"],
+      "reference_facts": [
+        "A green sign above a grey door clearly reads EXIT.",
+        "The corridor is empty."
+      ],
+      "prohibited_claims": ["The building, address or location is known."],
+      "expected_object_labels": ["exit sign", "door"]
+    },
+    {
+      "id": "outdoor_scene",
+      "image": "images/outdoor_scene.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "A large leafy tree is on the left and an empty wooden bench is on the right.",
+        "A winding path crosses a grassy park beneath a blue sky."
+      ],
+      "prohibited_claims": ["The park or geographic location is known."],
+      "expected_object_labels": ["tree", "bench", "path"]
+    },
+    {
+      "id": "cluttered_scene",
+      "image": "images/cluttered_scene.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "A yellow folded cloth partly covers a red book.",
+        "Green-handled scissors rest across the cloth, with a blue bowl behind and purple pencil case to the right."
+      ],
+      "prohibited_claims": ["Hidden portions of the objects are completely visible."],
+      "expected_object_labels": ["book", "cloth", "scissors", "bowl", "pencil case"]
+    },
+    {
+      "id": "partly_obscured",
+      "image": "images/partly_obscured.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "The front portion of one red toy car is visible to the left of a grey box.",
+        "The grey box hides the rear portion of the toy car."
+      ],
+      "prohibited_claims": ["The complete toy car is visible."],
+      "expected_object_labels": ["toy car", "box"]
+    },
+    {
+      "id": "counting",
+      "image": "images/counting.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture, version 2.",
+      "allowed_questions": ["count_objects", "free_description"],
+      "reference_facts": ["Exactly four separate yellow square tiles form a two-by-two grid."],
+      "prohibited_claims": ["There are more or fewer than four yellow square tiles."],
+      "expected_object_labels": ["tiles"]
+    },
+    {
+      "id": "generic_person",
+      "image": "images/generic_person.png",
+      "licence": "CC0-1.0",
+      "provenance": "Project-created AI-generated photorealistic raster fixture with a fictional person, version 2.",
+      "allowed_questions": ["scene_json", "free_description"],
+      "reference_facts": [
+        "One person shown from behind stands on the left beside an empty wooden table on the right."
+      ],
+      "prohibited_claims": [
+        "The person's identity, age, emotion or sensitive traits are known.",
+        "Another person is present."
+      ],
+      "expected_object_labels": ["person", "table"]
+    }
+  ]
+}
