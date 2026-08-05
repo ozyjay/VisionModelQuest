@@ -1,20 +1,36 @@
 # VisionModelQuest
 
-VisionModelQuest is a local-first command-line laboratory for comparing image-to-text and
-vision-language models on the Framework Desktop. It measures compatibility, deterministic
-contract following, latency, throughput, memory and thermal observations while keeping
-subjective quality under explicit human review.
+VisionModelQuest is a local-first vision-language model evaluation laboratory for the
+Framework Desktop. It includes two first-class ways to work:
 
-It also includes a Fedora-native GTK 4 and libadwaita
-[Vision Processing Explorer](docs/NATIVE_EXPLORER.md) for interactive prompt, image and
-visual-token experiments without a browser or local network service.
+- **Vision Processing Explorer** — a Fedora-native GTK 4 and libadwaita desktop application
+  for interactive image, prompt and visual-token experiments.
+- **Benchmark suite** — command-line workloads for measuring compatibility, deterministic
+  contract following, latency, throughput, memory and thermal observations.
+
+Both keep subjective quality under explicit human review and operate without a browser or
+local network service.
 
 The benchmark never downloads model weights. Real adapters resolve an allowlisted full
 commit from the existing Hugging Face cache with `local_files_only=True` and
 `trust_remote_code=False`. Missing, gated or incompatible models produce a structured
 failure in the retained report.
 
-## Set up and verify
+## Launch the desktop application
+
+Set up and open the [Vision Processing Explorer](docs/NATIVE_EXPLORER.md):
+
+```bash
+pwsh ./scripts/setup.ps1 -Ui
+./scripts/run_ui.sh
+```
+
+The application lets you select a local image, load an allowlisted model, edit prompts,
+generate output, inspect visual-token regions, manage experiment revisions and review
+benchmark reports. For physical inference, also prepare the ROCm environment with
+`pwsh ./scripts/setup.ps1 -Rocm`.
+
+## Set up and verify the benchmark suite
 
 ```powershell
 pwsh -NoProfile -File scripts/setup.ps1
