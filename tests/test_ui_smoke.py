@@ -60,3 +60,35 @@ def test_worker_controller_preserves_virtual_environment_launcher(
 
     assert controller.python == launcher.absolute()
     assert controller.python != launcher.resolve()
+
+
+def test_worker_operation_error_does_not_restart_worker() -> None:
+    pytest.importorskip("gi")
+    from visionmodelquest.ui.application import ExplorerPage
+
+    class Application:
+        def __init__(self) -> None:
+            self.errors: list[tuple[str, str]] = []
+
+        def show_error(self, heading: str, body: str) -> None:
+            self.errors.append((heading, body))
+
+    class Page:
+        application = Application()
+
+    page = Page()
+    ExplorerPage.handle_response(
+        page,
+        {
+            "operation": "initialise_processor",
+            "status": "error",
+            "error": {
+                "category": "worker_error",
+                "message": "The worker could not complete the operation.",
+            },
+        },
+    )
+
+    assert page.application.errors == [
+        ("Worker operation failed", "The worker could not complete the operation.")
+    ]

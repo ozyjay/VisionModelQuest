@@ -330,8 +330,6 @@ class ExplorerPage(Gtk.Box):
         if payload.get("status") != "ok":
             error = payload.get("error", {})
             self.application.show_error("Worker operation failed", error.get("message", "Unknown error"))
-            if error.get("category") == "worker_error":
-                self.application.controller.stop(restart=True)
             return
         result = payload.get("result", {})
         if operation == "initialise_processor":
@@ -830,6 +828,7 @@ class VisionExplorerApplication(Adw.Application):
         self.explorer: ExplorerPage
         self.controller: WorkerController
         self.toast_overlay: Adw.ToastOverlay
+        self._error_dialog: Adw.AlertDialog | None = None
         self._worker_error_dialog: Adw.AlertDialog | None = None
         self.connect("shutdown", self._shutdown)
         self._install_actions()
@@ -938,8 +937,18 @@ class VisionExplorerApplication(Adw.Application):
         self.toast_overlay.add_toast(Adw.Toast(title=text, timeout=4))
 
     def show_error(self, heading: str, body: str) -> None:
+        if self._error_dialog is not None:
+            self._error_dialog.set_heading(heading)
+            self._error_dialog.set_body(body)
+            return
         dialog = Adw.AlertDialog(heading=heading, body=body)
         dialog.add_response("close", "Close")
+
+        def closed(*_args: object) -> None:
+            self._error_dialog = None
+
+        dialog.connect("response", closed)
+        self._error_dialog = dialog
         dialog.present(self.window)
 
     def show_text_dialog(self, heading: str, text: str) -> None:
