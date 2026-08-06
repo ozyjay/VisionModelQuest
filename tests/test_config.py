@@ -14,6 +14,7 @@ def test_checked_in_configuration_is_valid_and_allowlisted():
         "qwen35-0.8b",
         "qwen35-2b",
         "qwen35-4b",
+        "smolvlm2-2.2b",
         "smolvlm2-500m-video",
         "smolvlm2-256m-video",
         "gemma3-4b",
@@ -25,6 +26,10 @@ def test_checked_in_configuration_is_valid_and_allowlisted():
 def test_smolvlm2_video_models_are_pinned_to_the_requested_repositories():
     models = load_models()
     expected = {
+        "smolvlm2-2.2b": (
+            "HuggingFaceTB/SmolVLM2-2.2B-Instruct",
+            "482adb537c021c86670beed01cd58990d01e72e4",
+        ),
         "smolvlm2-500m-video": (
             "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",
             "7b375e1b73b11138ff12fe22c8f2822d8fe03467",
