@@ -14,11 +14,30 @@ def test_checked_in_configuration_is_valid_and_allowlisted():
         "qwen35-0.8b",
         "qwen35-2b",
         "qwen35-4b",
-        "smolvlm2-2.2b",
+        "smolvlm2-500m-video",
+        "smolvlm2-256m-video",
         "gemma3-4b",
     }
     assert all(model.local_files_only for model in models.values())
     assert all(not model.trust_remote_code for model in models.values())
+
+
+def test_smolvlm2_video_models_are_pinned_to_the_requested_repositories():
+    models = load_models()
+    expected = {
+        "smolvlm2-500m-video": (
+            "HuggingFaceTB/SmolVLM2-500M-Video-Instruct",
+            "7b375e1b73b11138ff12fe22c8f2822d8fe03467",
+        ),
+        "smolvlm2-256m-video": (
+            "HuggingFaceTB/SmolVLM2-256M-Video-Instruct",
+            "067788b187b95ebe7b2e040b3e4299e342e5b8fd",
+        ),
+    }
+
+    assert {
+        key: (models[key].model_id, models[key].revision) for key in expected
+    } == expected
 
 
 def test_real_model_requires_full_exact_revision():
@@ -112,4 +131,3 @@ def test_fixture_paths_cannot_escape_manifest_root(tmp_path: Path):
     )
     with pytest.raises(ValidationError, match="safe relative"):
         load_workload(fixture_path, question_path)
-
