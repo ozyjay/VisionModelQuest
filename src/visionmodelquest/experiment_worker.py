@@ -19,7 +19,11 @@ from visionmodelquest.adapters import create_adapter
 from visionmodelquest.cache import resolve_snapshot
 from visionmodelquest.config import ModelDefinition, load_models
 from visionmodelquest.contracts import ContractError, parse_output
-from visionmodelquest.explorer.inspection import mock_inspection, qwen_inspection
+from visionmodelquest.explorer.inspection import (
+    mock_inspection,
+    qwen_inspection,
+    smolvlm_inspection,
+)
 from visionmodelquest.explorer.lifecycle import WorkerState
 from visionmodelquest.explorer.logging import local_logger
 from visionmodelquest.explorer.prompts import compile_prompt
@@ -91,6 +95,17 @@ class ExperimentRuntime:
                 maximum_pixels = int(self.definition.visual_token_budget or 140) * 16**2 * 2**2
                 image_processor.size["shortest_edge"] = min(65_536, maximum_pixels)
                 image_processor.size["longest_edge"] = maximum_pixels
+            elif self.definition.adapter == "smolvlm2":
+                configuration = json.loads((snapshot / "config.json").read_text(encoding="utf-8"))
+                vision = configuration.get("vision_config", {})
+                patch_size = vision.get("patch_size")
+                merge_size = configuration.get("scale_factor")
+                if not all(
+                    isinstance(value, int) and 1 <= value <= 64
+                    for value in (patch_size, merge_size)
+                ):
+                    raise RuntimeError("cached SmolVLM geometry is invalid")
+                self.smolvlm_geometry = (patch_size, merge_size)
         self.state = WorkerState.PROCESSOR_READY
         return {
             "model_key": self.definition.key,
@@ -119,6 +134,16 @@ class ExperimentRuntime:
                 processed_root=self.processed_root,
                 image_processor=self.processor.image_processor,
                 visual_token_budget=budget,
+            )
+        elif self.definition.adapter == "smolvlm2":
+            patch_size, merge_size = self.smolvlm_geometry
+            inspection = smolvlm_inspection(
+                image_path=image_path,
+                processed_root=self.processed_root,
+                image_processor=self.processor.image_processor,
+                visual_token_budget=budget,
+                patch_size=patch_size,
+                merge_size=merge_size,
             )
         else:
             raise ValueError("this adapter does not support preprocessing inspection in v1")

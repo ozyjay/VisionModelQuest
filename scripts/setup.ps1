@@ -123,8 +123,8 @@ if ($Rocm) {
     Install-Environment `
         -Path '.venv-rocm72' `
         -BootstrapPython $RocmPython `
-        -InstallArguments @('-r', 'requirements-rocm72.txt', '-e', '.[dev]')
-    & .venv-rocm72/bin/python -c "import torch, transformers; print('torch', torch.__version__); print('hip', torch.version.hip); print('transformers', transformers.__version__); print('cuda_available', torch.cuda.is_available())"
+        -InstallArguments @('-r', 'requirements-rocm72.txt', '-e', '.[dev,rocm]')
+    & .venv-rocm72/bin/python -c "import num2words, torch, transformers; print('torch', torch.__version__); print('hip', torch.version.hip); print('transformers', transformers.__version__); print('cuda_available', torch.cuda.is_available())"
     if ($LASTEXITCODE -ne 0) {
         throw 'The ROCm environment was installed, but its runtime verification failed.'
     }

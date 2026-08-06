@@ -74,6 +74,73 @@ def qwen_inspection(
     )
 
 
+def smolvlm_inspection(
+    *,
+    image_path: Path,
+    processed_root: Path,
+    image_processor: Any,
+    visual_token_budget: int,
+    patch_size: int,
+    merge_size: int,
+) -> ImageInspection:
+    with Image.open(image_path) as opened:
+        media_type = Image.MIME.get(opened.format or "", "application/octet-stream")
+        original_width, original_height = opened.size
+        raster = opened.convert("RGB")
+    result = image_processor(images=[raster], return_tensors="pt")
+    batch_size, frame_count, _channels, tensor_height, tensor_width = (
+        int(value) for value in result["pixel_values"].shape
+    )
+    if batch_size != 1:
+        raise ValueError("SmolVLM inspection requires exactly one image batch")
+    raw_rows = tensor_height // patch_size
+    raw_columns = tensor_width // patch_size
+    processed_height = raw_rows * patch_size
+    processed_width = raw_columns * patch_size
+    tokens = build_token_regions(
+        source_width=original_width,
+        source_height=original_height,
+        processed_width=processed_width,
+        processed_height=processed_height,
+        raw_rows=raw_rows,
+        raw_columns=raw_columns,
+        merge_size=merge_size,
+    )
+    processed_id = uuid.uuid4().hex
+    processed_root.mkdir(parents=True, exist_ok=True, mode=0o700)
+    processed_path = processed_root / f"{processed_id}.png"
+    resample = getattr(image_processor, "resample", Image.Resampling.LANCZOS)
+    processed_raster = raster.resize((tensor_width, tensor_height), resample=resample)
+    processed_raster.crop((0, 0, processed_width, processed_height)).save(processed_path, "PNG")
+    processed_path.chmod(0o600)
+    return ImageInspection(
+        original_width=original_width,
+        original_height=original_height,
+        media_type=media_type,
+        encoded_size=image_path.stat().st_size,
+        processed_width=processed_width,
+        processed_height=processed_height,
+        resize_method=str(resample),
+        colour_conversion="RGB",
+        rescale_factor=float(getattr(image_processor, "rescale_factor", 1 / 255)),
+        channel_mean=tuple(float(value) for value in image_processor.image_mean),
+        channel_standard_deviation=tuple(
+            float(value) for value in image_processor.image_std
+        ),
+        image_grid_thw=(frame_count, raw_rows, raw_columns),
+        patch_size=patch_size,
+        merge_size=merge_size,
+        requested_visual_token_budget=visual_token_budget,
+        raw_grid_rows=raw_rows,
+        raw_grid_columns=raw_columns,
+        merged_grid_rows=raw_rows // merge_size,
+        merged_grid_columns=raw_columns // merge_size,
+        actual_visual_tokens=len(tokens) * frame_count,
+        processed_image_id=processed_id,
+        tokens=tokens,
+    )
+
+
 def mock_inspection(
     *,
     image_path: Path,
